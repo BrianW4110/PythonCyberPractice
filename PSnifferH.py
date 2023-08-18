@@ -25,3 +25,22 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# ctypes class for reading packet headers
+from ctypes import *
+import struct
+
+class IP(Structure):
+    _fields_ = [
+        ("ihl", c_ubyte, 4), #internet hdr length (signifies start of header)
+        ("version", c_ubyte, 4),
+        ("tos", c_ubyte, 8), #type of service (priority of packet)
+        ("len", c_ushort, 16), #length
+        ("id", c_ushort, 16),
+        ("offset", c_ushort, 16), #fragment offset (identify order sequence of fragmented packets)
+        ("ttl" , c_ubyte, 8), #time to live (time limit before being discarded by network)
+        ("protocol_num", c_ubyte, 8),
+        ("sum", c_ushort, 16), #hdr checksum (identifies errors in the packet)
+        ("src", c_int32, 32), #source IP
+        ("dst", c_int32, 32), #destination IP
+    ]
