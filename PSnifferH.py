@@ -44,3 +44,11 @@ class IP(Structure):
         ("src", c_int32, 32), #source IP
         ("dst", c_int32, 32), #destination IP
     ]
+
+    #constructor 
+    def __new__(cls, socket_buffer=None):
+        return cls.from_buffer_copy(socket_buffer)
+    def __init__(self, socket_buffer=None):
+        # converts to human readable IP 
+        self.src_address = socket.inet_ntoa(struct.pack("<L", self.src))
+        self.dst_address = socket.inet_ntoa(struct.pack("<L", self.dst))
