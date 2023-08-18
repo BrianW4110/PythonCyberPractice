@@ -26,14 +26,14 @@ def main():
 if __name__ == '__main__':
     main()
 
-# ctypes class for reading packet headers
+# ctypes class for reading packet headers in C
 from ctypes import *
 import struct
 
 class IP(Structure):
     _fields_ = [
-        ("ihl", c_ubyte, 4), #internet hdr length (signifies start of header)
         ("version", c_ubyte, 4),
+        ("ihl", c_ubyte, 4), #internet hdr length (signifies start of header)
         ("tos", c_ubyte, 8), #type of service (priority of packet)
         ("len", c_ushort, 16), #length
         ("id", c_ushort, 16),
@@ -52,3 +52,13 @@ class IP(Structure):
         # converts to human readable IP 
         self.src_address = socket.inet_ntoa(struct.pack("<L", self.src))
         self.dst_address = socket.inet_ntoa(struct.pack("<L", self.dst))
+
+import ipaddress
+#import struct
+
+class IP:
+    def __init__(self, buff=None):
+        #unpacks the fields of the header in bytes
+        header = struct.unpack('<BBHHHBBH4s4s', buff)
+
+        self.ver = header[0] >> 4
