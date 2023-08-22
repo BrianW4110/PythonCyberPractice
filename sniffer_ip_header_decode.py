@@ -55,16 +55,46 @@ class IP:
         self.dst_address = ipaddress.ip_address(self.dst)
 
         # gives protocal constants to their names
-        self.protocal_map = {1: "ICMP", 6: "TCP", 17: "UDP"}
+        self.protocol_map = {1: "ICMP", 6: "TCP", 17: "UDP"}
+        try:
+            self.protocal = self.protocol_map[self.protocol_num]
+        except Exception as e:
+            print('%s No protocal for %s' % (e, self.protocol_num))
+        self.protocol = str(self.protocol_num)
 
-
-
-#for reading ICMP messages
-class ICMP:
-    def __init__(self,buff):
-        header = struct.unpack('<BBHHH', buff)
-        self.type = header[0]
-        self.code = header[1]
-        self.sum = header[2]
-        self.id = header[3]
-        self.seq = header[4]
+    def sniff(host):
+        # different protocols for different operating systems
+        if os.name == 'nt':
+            # for Windows
+            socket_protocol = socket.IPPROTO_IP
+        # else:
+        #     socket_protocol = socket.IPPROTO_ICMP
+        
+        #creates a socket with attributes that are able to communicate with packets and the IP
+        sniffer = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket_protocol)
+        sniffer.bind((host, 10727))
+        #IP header will be shown in packets
+        sniffer.setsockopt(socket_protocol, socket.IP_HDRINCL, 1)
+        #enable promiscuous mode for windows
+        if os.name == 'nt':
+            sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
+        try:
+            while True:
+                # reading packets
+                raw_buffer = sniffer.recvfrom(65535) #65535 is the maximum size for a packet
+                ip_header = IP(raw_buffer[0:20])
+                #prints packet's protocol and host + host end address
+                print('Protocol: %s %s ->  %s' % (ip_header.protocol, ip_header.src_address, ip_header.dst_address))
+        
+        except KeyboardInterrupt:
+            #for windows turn of primiscuous mode
+            if os.name == 'nt':
+                sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
+            sys.exit()
+        
+    if __name__ == '__main__':
+        if len(sys.argv) == 2:
+            host = sys.argv[1]
+        else:
+            host = socket.gethostname()
+        sniff(host)
