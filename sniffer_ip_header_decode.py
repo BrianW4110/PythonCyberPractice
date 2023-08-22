@@ -1,6 +1,5 @@
 # ctypes class for reading packet headers in C (ctype method)
 # from ctypes import *
-# import struct
 
 # class IP(Structure):
 #     _fields_ = [
@@ -28,6 +27,9 @@
 #unpacks the header to binary and assigns fields into a data structure (struct method)
 import ipaddress
 import struct
+import os
+import socket
+import sys
 
 class IP:
     def __init__(self, buff=None):
@@ -54,6 +56,8 @@ class IP:
 
         # gives protocal constants to their names
         self.protocal_map = {1: "ICMP", 6: "TCP", 17: "UDP"}
+
+
 
 #for reading ICMP messages
 class ICMP:
