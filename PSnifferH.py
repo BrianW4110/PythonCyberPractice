@@ -1,3 +1,4 @@
+#reads one packet from host network
 import socket
 import os
 
