@@ -1,29 +1,3 @@
-# ctypes class for reading packet headers in C (ctype method)
-# from ctypes import *
-
-# class IP(Structure):
-#     _fields_ = [
-#         ("version", c_ubyte, 4),
-#         ("ihl", c_ubyte, 4), #internet hdr length (signifies start of header)
-#         ("tos", c_ubyte, 8), #type of service (priority of packet)
-#         ("len", c_ushort, 16), #length
-#         ("id", c_ushort, 16),
-#         ("offset", c_ushort, 16), #fragment offset (identify order sequence of fragmented packets)
-#         ("ttl" , c_ubyte, 8), #time to live (time limit before being discarded by network)
-#         ("protocol_num", c_ubyte, 8),
-#         ("sum", c_ushort, 16), #hdr checksum (identifies errors in the packet)
-#         ("src", c_int32, 32), #source IP
-#         ("dst", c_int32, 32), #destination IP
-#     ]
-
-#     #constructor 
-#     def __new__(cls, socket_buffer=None):
-#         return cls.from_buffer_copy(socket_buffer)
-#     def __init__(self, socket_buffer=None):
-#         # converts to human readable IP 
-#         self.src_address = socket.inet_ntoa(struct.pack("<L", self.src))
-#         self.dst_address = socket.inet_ntoa(struct.pack("<L", self.dst))
-
 #unpacks the header to binary and assigns fields into a data structure (struct method)
 import ipaddress
 import struct
@@ -62,6 +36,15 @@ class IP:
             print('%s No protocol for %s' % (e, self.protocol_num))
         self.protocol = str(self.protocol_num)
 
+class ICMP:
+    def __init__(self, buff):
+        header = struct.unpack('<BBHHH', buff)
+        self.type = header[0]
+        self.code = header[1]
+        self.sum = header[2]
+        self.id = header[3]
+        self.seq = header[4]
+
 def sniff(host):
     # different protocols for different operating systems
     if os.name == 'nt':
@@ -83,11 +66,21 @@ def sniff(host):
             # reading packets
             raw_buffer = sniffer.recvfrom(65535)[0] #65535 is the maximum size for a packet
             ip_header = IP(raw_buffer[0:20])
-            #prints packet's protocol and host + host end address
-            print('Protocol: %s %s ->  %s' % (ip_header.protocol, ip_header.src_address, ip_header.dst_address))
+            if ip_header.protocol == 'ICMP':
+                #prints packet's protocol and host + host end address
+                print('Protocol: %s %s ->  %s' % (ip_header.protocol, ip_header.src_address, ip_header.dst_address))
+                print(f'Version: {ip_header.ver}')
+                print(f'Header Length: {ip_header.ihl} TTL: {ip_header.ttl}')
+
+                #figure where the ICMP packet starts
+                offset = ip_header.ihl * 4
+                buf = raw_buffer[offset:offset + 8]
+                #create ICMP structure
+                icmp_header = ICMP(buf)
+                print('ICMP -> Type: %s Code: %s\n' % (icmp_header.type, icmp_header.code))
     
     except KeyboardInterrupt:
-        #for windows turn of primiscuous mode
+        #for windows turn of promiscuous mode
         if os.name == 'nt':
             sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
         sys.exit()
