@@ -2,7 +2,7 @@
 import socket
 import os
 
-host = socket.gethostname()
+host = host = socket.gethostbyname(socket.gethostname())
 
 def main():
     # different protocols for different operating systems
