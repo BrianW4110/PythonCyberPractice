@@ -4,6 +4,8 @@ import struct
 import os
 import socket
 import sys
+import getSubnet
+
 
 class IP:
     def __init__(self, buff=None):
@@ -44,6 +46,20 @@ class ICMP:
         self.sum = header[2]
         self.id = header[3]
         self.seq = header[4]
+
+#takes user host name to calculate subnet
+host = socket.gethostname()
+subnetObj = getSubnet.getSubnetC(host)
+
+#subnet to scan from
+SUBNET = subnetObj.method()
+
+message = 'Yourself or Someone like you'
+# sends UDP datagrams with of given message
+def udp_sender():
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
+        for ip in ipaddress.ip_network(SUBNET).hosts():
+            sender.sendto(bytes(message, 'utf8'), (str(ip), 10727))
 
 def sniff(host):
     # different protocols for different operating systems
