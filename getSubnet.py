@@ -3,10 +3,13 @@ import socket
 class getSubnetC:
     def __init__(self, host):
         hostname = host
-        ip = socket.gethostbyname(hostname)
-        shorten = ip[:len(ip) - 3]
+        self.ip = socket.gethostbyname(hostname)
+        last_index = self.ip.rfind('.')
+        shorten = self.ip[:last_index + 1]
         self.subnet = shorten + '0/24'
         
 
     def method(self):
         return self.subnet
+    def getIP(self):
+        return self.ip

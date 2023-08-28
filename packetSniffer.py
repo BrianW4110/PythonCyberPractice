@@ -76,56 +76,56 @@ class Scanner:
         
         #creates a socket with attributes that are able to communicate with packets and the IP
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket_protocol)
-        self.socket.bind((host, 0)) #port of zero lets OS pick port
+        self.socket.bind((host, 10727)) #port of zero lets OS pick port
         #IP header will be shown in packets
         self.socket.setsockopt(socket_protocol, socket.IP_HDRINCL, 1)
         #enable promiscuous mode for windows
         if os.name == 'nt':
             self.socket.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
-def sniff(self):
-    hosts_up = set([f'{str(self.host)}*'])
-    try:
-        while True:
-            #read packet
-            raw_buffer = self.socket.recvfrom(65535)[0] #65535 is the maximum size for a packet
-            ip_header = IP(raw_buffer[0:20])
-            if ip_header.protocol == 'ICMP':
-                # #prints packet's protocol and host + host end address
-                # print('Protocol: %s %s ->  %s' % (ip_header.protocol, ip_header.src_address, ip_header.dst_address))
-                # print(f'Version: {ip_header.ver}')
-                # print(f'Header Length: {ip_header.ihl} TTL: {ip_header.ttl}')
+    def sniff(self):
+        hosts_up = set([f'{str(self.host)}*'])
+        try:
+            while True:
+                #read packet
+                raw_buffer = self.socket.recvfrom(65535)[0] #65535 is the maximum size for a packet
+                ip_header = IP(raw_buffer[0:20])
+                if ip_header.protocol == 'ICMP':
+                    # #prints packet's protocol and host + host end address
+                    # print('Protocol: %s %s ->  %s' % (ip_header.protocol, ip_header.src_address, ip_header.dst_address))
+                    # print(f'Version: {ip_header.ver}')
+                    # print(f'Header Length: {ip_header.ihl} TTL: {ip_header.ttl}')
 
-                #figure where the ICMP packet starts
-                offset = ip_header.ihl * 4
-                buf = raw_buffer[offset:offset + 8]
-                #create ICMP structure
-                icmp_header = ICMP(buf)
+                    #figure where the ICMP packet starts
+                    offset = ip_header.ihl * 4
+                    buf = raw_buffer[offset:offset + 8]
+                    #create ICMP structure
+                    icmp_header = ICMP(buf)
 
-                # print('ICMP -> Type: %s Code: %s\n' % (icmp_header.type, icmp_header.code))
+                    # print('ICMP -> Type: %s Code: %s\n' % (icmp_header.type, icmp_header.code))
 
-                # check for CODE and TYPE 3
-                if icmp_header.code == 3 and icmp_header.type == 3:
-                    if ipaddress.ip_address(ip_header.str_address) in ipaddress.IPv4Network(SUBNET):
-                        #check for if message we sent is in given packet
-                        if raw_buffer[len(raw_buffer) - len(message):] == bytes(message, 'utf8'):
-                            tgt = str(ip_header.src_address)
-                            if tgt != self.host and tgt not in hosts_up:
-                                hosts_up.add(str(ip_header.src_address))
-                                print(f'Host Up: {tgt}')
+                    # check for CODE and TYPE 3
+                    if icmp_header.code == 3 and icmp_header.type == 3:
+                        if ipaddress.ip_address(ip_header.str_address) in ipaddress.IPv4Network(SUBNET):
+                            #check for if message we sent is in given packet
+                            if raw_buffer[len(raw_buffer) - len(message):] == bytes(message, 'utf8'):
+                                tgt = str(ip_header.src_address)
+                                if tgt != self.host and tgt not in hosts_up:
+                                    hosts_up.add(str(ip_header.src_address))
+                                    print(f'Host Up: {tgt}')
 
-    #used to respond to CTRL-C (user stops script)
-    except KeyboardInterrupt:
-        #for windows turn of promiscuous mode
-        if os.name == 'nt':
-            self.socket.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
-        print('\nUser stopped.')
-        if hosts_up:
-            print(f'\n\nSummary: Hosts up on {SUBNET}')
-        for host in sorted(hosts_up):
-            print(f'{host}')
-        print('')
-        sys.exit()
+        #used to respond to CTRL-C (user stops script)
+        except KeyboardInterrupt:
+            #for windows turn of promiscuous mode
+            if os.name == 'nt':
+                self.socket.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
+            print('\nUser stopped.')
+            if hosts_up:
+                print(f'\n\nSummary: Hosts up on {SUBNET}')
+            for host in sorted(hosts_up):
+                print(f'{host}')
+            print('')
+            sys.exit()
         
 if __name__ == '__main__':
     if len(sys.argv) == 2:
