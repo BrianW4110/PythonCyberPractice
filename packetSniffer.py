@@ -1,4 +1,6 @@
-#unpacks the header to binary and assigns fields into a data structure (struct method)
+#sends packets with a given message and then sniffs those packets that were sent
+#uses subnets of host's IP 
+#proof of concept of reading packets 
 import ipaddress
 import struct
 import os
